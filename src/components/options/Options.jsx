@@ -1,8 +1,19 @@
 import { useTonConnectUI, useTonWallet } from "@tonconnect/ui-react";
+import { CHAIN } from "@tonconnect/protocol";
+import { beginCell, storeMessage, TonClient } from "@ton/ton";
+import { Cell } from "tonweb";
+import TonWeb from "tonweb";
 
 export function Options({ options }) {
   const [tonConnectUi] = useTonConnectUI();
   const wallet = useTonWallet();
+
+  const { utils } = TonWeb;
+
+  // Create Client
+  const client = new TonClient({
+    endpoint: "https://testnet.toncenter.com/api/v2/jsonRPC",
+  });
 
   async function buyOption(price) {
     const defaultT = {
@@ -24,11 +35,38 @@ export function Options({ options }) {
     };
 
     try {
-      const result = await tonConnectUi.sendTransaction(defaultT);
-      console.log(result.status);
-      console.log(result.amount);
+      if (wallet) {
+        if (wallet.account.chain != -239) {
+          alert("Must be in Mainnet");
+        } else {
+          const result = await tonConnectUi.sendTransaction(defaultT);
+          console.log(result.boc);
+
+          // const cell = Cell.fromBoc(`${result.boc}`);
+          // // Calculate the hash of the BOC
+          // const bocHash = utils.bytesToHex(cell.hash());
+          // console.log("BOC Hash:", bocHash);
+
+          const state = await client.getContractState(wallet.account.address);
+          const { lt: lastLt, hash: lastHash } = state.lastTransaction;
+          const lastTx = await client.getTransaction(
+            wallet.account.address,
+            lastLt,
+            lastHash
+          );
+          console.log(lastTx);
+
+          const msgCell = beginCell()
+            .store(storeMessage(lastTx.inMessage))
+            .endCell();
+          const inMsgHash = msgCell.hash().toString("base64");
+          console.log("InMsgHash", inMsgHash);
+        }
+      } else {
+        alert("First, connect a wallet");
+      }
     } catch (e) {
-      alert(e);
+      console.error(e);
     }
   }
   return (

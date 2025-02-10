@@ -11,8 +11,6 @@ import {
 } from "@tonconnect/ui-react";
 
 function App() {
-  
-
   const options = data;
   return (
     <TonConnectUIProvider
