@@ -40,7 +40,7 @@ export function Options({ options }) {
           alert("Must be in Mainnet");
         } else {
           const result = await tonConnectUi.sendTransaction(defaultT);
-          console.log(result.boc);
+          alert(result);
 
           // const cell = Cell.fromBoc(`${result.boc}`);
           // // Calculate the hash of the BOC
